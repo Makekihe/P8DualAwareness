@@ -1,0 +1,13 @@
+git clone -b melodic-devel turtlebot3 and turtlebot3-simulations
+
+export TURTLEBOT3_MODEL=burger //options->[ burger waffle waffle_pi ]
+export TURTLEBOT3_MODEL=burger && source devel/setup.bash && roslaunch turtlebot3_gazebo turtlebot3_world.launch
+
+//new terminal
+export TURTLEBOT3_MODEL=burger
+export TURTLEBOT3_MODEL=burger && source devel/setup.bash && roslaunch turtlebot3_gazebo turtlebot3_gazebo_rviz.launch
+
+//new terminal
+export TURTLEBOT3_MODEL=burger
+export TURTLEBOT3_MODEL=burger && source devel/setup.bash && roslaunch turtlebot3_navigation turtlebot3_navigation.launch 
+

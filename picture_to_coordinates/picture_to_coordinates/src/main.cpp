@@ -3,6 +3,8 @@
 #include <numeric>
 #include <librealsense2/rs.hpp>
 #include "ros/ros.h"
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseArray.h>
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int32MultiArray.h"
@@ -36,7 +38,8 @@ class doItAll{
     public:
         doItAll(){
             std::cout << "Object is being created" << std::endl;
-            pub=nh.advertise<std_msgs::Float32MultiArray>("coordinates", 10);;
+            //pub=nh.advertise<std_msgs::Float32MultiArray>("coordinates", 10);
+            pub=nh.advertise<geometry_msgs::PoseArray>("coordinates", 10);
             //sub=nh.subscribe("myBoundingBoxes", 10, &doItAll::fake_callback, this);
             sub=nh.subscribe("darknet_ros/bounding_boxes", 10, &doItAll::callback, this);
             // STREAM, STREAM_INDEX, WIDTH, HEIGHT, FORMAT, FPS, &e);
@@ -96,8 +99,9 @@ class doItAll{
             boxes.clear();
             boxes=msg->bounding_boxes;
             int seq_id=msg->header.seq;
-            std_msgs::Float32MultiArray pub_array;
-            pub_array.data.clear();
+            geometry_msgs::PoseArray poseArray;
+            //std_msgs::Float32MultiArray pub_array;
+            //pub_array.data.clear();
             //pub_array.data.push_back(seq_id);
 
             for (size_t i = 0; i < boxes.size(); i++){
@@ -151,13 +155,18 @@ class doItAll{
                     std::cout << "Minimum depth is "<< depth_min << std::endl;*/
 
                     float xcoordinate=((center[0]-cx)*depth)/fx; //((u-cx)*Z)/fx;
-                    pub_array.data.push_back(xcoordinate);
+                    //pub_array.data.push_back(xcoordinate);
                     float ycoordinate=((center[1]-cy)*depth)/fy; //((v-cy)*Z)/fy;
-                    pub_array.data.push_back(ycoordinate);
+                    //pub_array.data.push_back(ycoordinate);
                     float zcoordinate=depth;
-                    pub_array.data.push_back(zcoordinate);
+                    //pub_array.data.push_back(zcoordinate);
 
-                    pub.publish(pub_array);
+                    poseArray.poses[i].position.x = xcoordinate;
+                    poseArray.poses[i].position.y = ycoordinate;
+                    poseArray.poses[i].position.z = zcoordinate;
+
+                    pub.publish(poseArray);
+                    //pub.publish(pub_array);
                     std::cout << "I have published coordinates." << std::endl;      
                 }
             }

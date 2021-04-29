@@ -14,7 +14,6 @@ class calculateVelocity{
         float previousCoordinates [3] = {0.0, 0.0, 0.0};          //TODO: Figure out how to handle the first time a detection is made - I made an "if" and "else" statement
         ros::Time startTime;
         ros::Time stopTime;
-        //ros::Duration fiveSeconds(5.0);
 
     public: 
         calculateVelocity(){
@@ -32,17 +31,6 @@ class calculateVelocity{
             float currentCoordinates [3];
             //float currentCoordinates [3] = {4, 3, 2};   //TODO: Figure out how to handle multiple people (not necessary for now)
             
-            //The following is with the intention of trying to handle the first time a detection is made.
-            //My logic would be to determine if a certain longer timespan has passed between two detections, to determine if the new detection
-            //should be connected to the previous detection, if it should a "new first detection" for a new person. These start/stop-Time would
-            //then be in the start and end of the callback function, and we could compare the times - doesn't work atm.
-            //Feel free to take another approach.
-            // Potential help: http://wiki.ros.org/roscpp/Overview/Time
-            // OR: https://answers.ros.org/question/276110/typeerror-cannot-compare-to-non-duration/
-            //if ((startTime-stopTime) < fiveSeconds){
-
-            //}
-            
             //Assign coordinates to array
             currentCoordinates[0] = msgs.poses[0].position.x;
             currentCoordinates[1] = msgs.poses[0].position.y;
@@ -54,7 +42,7 @@ class calculateVelocity{
             // std::cout << "Z: "<< currentCoordinates[2] << std::endl;
 
 
-            if (previousCoordinates[0] != 0.0 && previousCoordinates[1] != 0.0 && previousCoordinates[2] != 0.0){
+            if (previousCoordinates[0] != 0.0 && previousCoordinates[1] != 0.0){
                 ros::Duration timestep = startTime-stopTime;                            //TODO: Calculate the timestep - did that with the line below
                 double timeStep_sec = timestep.toSec();
 
@@ -95,6 +83,7 @@ class calculateVelocity{
                 //person.reliability = 0.5;
 
                 people.header = msgs.header;
+                people.header.frame_id = "map";
                 //If the header stamp is empty, then assign the current time
                 if (people.header.stamp == ros::Time(0)){
                     people.header.stamp = ros::Time::now();

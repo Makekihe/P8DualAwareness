@@ -81,31 +81,35 @@ int main(int argc, char** argv){
   transformE.transform.rotation.y = e.y();
   transformE.transform.rotation.z = e.z();
   transformE.transform.rotation.w = e.w();
-
-
+ 
+  ros::Time time_now;
+ 
   ros::Rate rate(10000.0);
+  
   while (node.ok()){
-    transformA.header.stamp = ros::Time::now();
+    time_now = ros::Time::now()
+      
+    transformA.header.stamp = time_now;
     tfb.sendTransform(transformA);
     //rate.sleep();
     printf("sending A\n");
 
-    transformB.header.stamp = ros::Time::now();
+    transformB.header.stamp = time_now;
     tfb.sendTransform(transformB);
     //rate.sleep();
     printf("sending B\n");
 
-    transformC.header.stamp = ros::Time::now();
+    transformC.header.stamp = time_now;
     tfb.sendTransform(transformC);
     //rate.sleep();
     printf("sending C\n");
 
-    transformD.header.stamp = ros::Time::now();
+    transformD.header.stamp = time_now;
     tfb.sendTransform(transformD);
     //rate.sleep();
     printf("sending D\n");
 
-    transformE.header.stamp = ros::Time::now();
+    transformE.header.stamp = time_now;
     tfb.sendTransform(transformE);
     //
     printf("sending E\n");

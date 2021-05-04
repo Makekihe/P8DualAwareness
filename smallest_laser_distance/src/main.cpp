@@ -1,12 +1,15 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
+#include <std_msgs/Float32.h>
 
 
 class calculateDistance{
     private:
         ros::Subscriber sub;
         ros::NodeHandle nh;
-        float shortestDistance;
+        float shortestDistance = 100;
+        float shortestReading = 100;
+
 
     public:
         calculateDistance(){
@@ -17,8 +20,22 @@ class calculateDistance{
 
 
         void callback(sensor_msgs::LaserScan msgs){
-            if(msgs.range_min<shortestDistance){
-                shortestDistance = msgs.range_min;
+            std::cout << "The shortest distance measured is: " << shortestDistance << " m" << std::endl;
+            //Determine the smalles non-zero number in the array
+            ROS_INFO("DEBUGGING 1");
+            for(int i = 0; i < sizeof(msgs.ranges); i++){ //THIS SIZEOF() FUNCTION DOESN'T TAKE IN ALL READINGS, SO THIS WONT WORK PROPERLY!!
+                std::cout << "DEBUGGING 2: " << i << "Distance is: " << msgs.ranges[i] << std::endl;
+                if(msgs.ranges[i] < shortestReading && msgs.ranges[i] > 0.1){
+                    ROS_INFO("DEBUGGING 3");
+                    shortestReading = msgs.ranges[i];
+                }
+            }
+
+            //Set new shortest distance if shorter than previous
+            ROS_INFO("DEBUGGING 4");
+            if(shortestReading<shortestDistance){
+                ROS_INFO("DEBUGGING 5");
+                shortestDistance = shortestReading;
             }
 
             //Print out the currently shortest distance measured

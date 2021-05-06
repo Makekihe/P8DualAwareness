@@ -30,7 +30,6 @@ class calculateDistance{
             std::vector<float> laser_data=msgs->ranges;
             int msg_size=laser_data.size();
             for(int i = 0; i < msg_size; i++){
-                std::cout << "Size of the scan.ranges: " << msg_size << std::endl;
                 if(msgs->ranges[i] < shortestReading && msgs->ranges[i] > 0.1){
                     shortestReading = msgs->ranges[i];
                 }
@@ -42,10 +41,10 @@ class calculateDistance{
             }
 
             //Print out the currently shortest distance measured
-	    myfile.open("/home/DistanceMeasurements.txt");
-	    myfile << "The shortest distance measured in test 1:\n";
-	    myfile << shortestDistance << " m";
-	    myfile.close();
+	        myfile.open("/home/ros/Desktop/DistanceMeasurements.txt"); //Change the filepath + name according to needs
+	        myfile << "The shortest distance measured in this test:\n";
+	        myfile << shortestDistance << " m";
+	        myfile.close();
             std::cout << "The shortest distance measured is: " << shortestDistance << " m" << std::endl;
  
         }

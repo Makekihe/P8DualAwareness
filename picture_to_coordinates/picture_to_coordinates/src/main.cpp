@@ -90,9 +90,32 @@ class doItAll{
             depth_kernel.clear();
             float depth;
             float zcoordinate;
-                    
+            double median;
+            
+            std::vector<float> a;
+            
+            a.push_back(depth_map.get_distance(xmin+center[0],ymin+center[1])); //get distance in center pixel
+            a.push_back(depth_map.get_distance(xmin+center[0],ymin+center[1]+1)); //get distance in top pixel
+            a.push_back(depth_map.get_distance(xmin+center[0]+1,ymin+center[1])); //get distance in right pixel
+            a.push_back(depth_map.get_distance(xmin+center[0]-1,ymin+center[1])); //get distance in left pixel
+            a.push_back(depth_map.get_distance(xmin+center[0],ymin+center[1]-1)); //get distance in bottom pixel
 
-            depth=depth_map.get_distance(xmin+center[0],ymin+center[1]); //get distance in center pixel
+            /* //For printing out the vector
+            for(int i = 0; i<a.size(); i++){
+                std::cout << a[i] << std::endl;
+            }
+            */
+
+            int n = sizeof(a) / sizeof(a[0]);
+
+            // First we sort the array
+            sort(a.begin(), a.end());
+ 
+            // check for even case
+            if (n % 2 != 0)
+                depth=(double)a[n / 2];
+        
+            depth=(double)(a[(n - 1) / 2] + a[n / 2]) / 2.0;
             
             if (depth>0.1 && depth<10) { //Valid depth value defined as 0.1<depth<10
                 zcoordinate=depth;

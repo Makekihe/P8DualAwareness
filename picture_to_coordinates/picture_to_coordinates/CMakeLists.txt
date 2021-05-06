@@ -10,7 +10,7 @@ project(picture_to_coordinates)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  darknet_ros_msgs
+  #darknet_ros_msgs
 )
 find_package(realsense2 REQUIRED)
 
@@ -210,7 +210,7 @@ include_directories(
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-add_executable(my_class src/main.cpp)
-add_dependencies(my_class ${catkin_EXPORTED_TARGETS})
-target_link_libraries(my_class ${catkin_LIBRARIES})
-target_link_libraries(my_class ${realsense2_LIBRARY})
+add_executable(coordinates src/main.cpp)
+add_dependencies(coordinates ${catkin_EXPORTED_TARGETS})
+target_link_libraries(coordinates ${catkin_LIBRARIES})
+target_link_libraries(coordinates ${realsense2_LIBRARY})

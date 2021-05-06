@@ -5,13 +5,12 @@
 #include "ros/ros.h"
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/Transform.h>
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
-#include "darknet_ros_msgs/BoundingBoxes.h"
-#include "darknet_ros_msgs/BoundingBox.h"
-#include "darknet_ros_msgs/ObjectCount.h"
+
 
 //#define STREAM          RS2_STREAM_DEPTH  // rs2_stream is a types of data provided by RealSense device           //
 #define FORMAT          RS2_FORMAT_Z16    // rs2_format identifies how binary data is encoded within a frame      //
@@ -32,16 +31,21 @@ class doItAll{
         //rs2::spatial_filter spatial_filter;
         //rs2::temporal_filter temp_filter;
         //rs2::hole_filling_filter hole_filter;
-        std::vector<darknet_ros_msgs::BoundingBox> boxes;
+        //std::vector<geometry_msgs::Transform> poses;
+        float xstart;
+        float ystart;
+        float xend;
+        float yend;
+        float id;
         //std::vector<float> coordinates; //XYZ, saved for real world coordinates 
         float cx=635.2405f, cy=359.3353f, fx=637.2601f, fy=637.2601f; // intrinsic for 1280x720
     public:
         doItAll(){
             std::cout << "Object is being created" << std::endl;
             //pub=nh.advertise<std_msgs::Float32MultiArray>("coordinates", 10);
-            pub=nh.advertise<geometry_msgs::PoseArray>("coordinates", 10);
-            //sub=nh.subscribe("myBoundingBoxes", 10, &doItAll::fake_callback, this);
-            sub=nh.subscribe("darknet_ros/bounding_boxes", 10, &doItAll::callback, this);
+            pub=nh.advertise<geometry_msgs::Pose>("coordinates", 10);
+            //sub=nh.subscribe("myBoundingposes", 10, &doItAll::fake_callback, this);
+            sub=nh.subscribe("/body_pose", 10, &doItAll::callback, this);
             // STREAM, STREAM_INDEX, WIDTH, HEIGHT, FORMAT, FPS, &e);
             cfg.enable_stream(RS2_STREAM_DEPTH, STREAM_INDEX, WIDTH, HEIGHT, FORMAT, FPS); 
             threshold_filter.set_option(RS2_OPTION_MIN_DISTANCE, 0.1f);
@@ -50,126 +54,65 @@ class doItAll{
 	        std::cout << "Object is ready" << std::endl;
         }
 
-        void fake_callback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
-
-            boxes=msg->bounding_boxes;
-            std_msgs::Float32MultiArray pub_array;
-            pub_array.data.clear();
-            
-            for (size_t i = 0; i < boxes.size(); i++){
-                if(boxes[i].Class=="human"){
-                    int xmin=boxes[i].xmin;
-                    int ymin=boxes[i].ymin;
-                    int xmax=boxes[i].xmax;
-                    int ymax=boxes[i].ymax;
-                    int center[2];
-                    center[0]=xmax-xmin;
-                    center[1]=ymax-ymin;
-
-                    float depth=4.5f;
-
-                    float xcoordinate=((center[0]-cx)*depth)/fx; //((u-cx)*Z)/fx;
-                    std::cout<<"xcoordinate "<<xcoordinate<<std::endl;
-                    pub_array.data.push_back(xcoordinate);
-                    float ycoordinate=((center[1]-cy)*depth)/fy; //((v-cy)*Z)/fy;
-                    std::cout<<"ycoordinate "<<ycoordinate<<std::endl;
-                    pub_array.data.push_back(ycoordinate);
-                    float zcoordinate=depth;
-                    std::cout<<"zcoordinate "<<zcoordinate<<std::endl;
-                    pub_array.data.push_back(zcoordinate);
-                }
-            }
-            
-            pub.publish(pub_array);
-            std::cout << "I have published coordinates." << std::endl;
-
-        }
-
-        void callback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
-            //std::cout << "Grabbing frames" << std::endl;
+        void callback(const geometry_msgs::Transform::ConstPtr& msg){
+           
             rs2::frameset frames=p.wait_for_frames();
-            rs2::depth_frame depth_map=frames.get_depth_frame(); //
-            //std::cout << "Filters" << std::endl;
+            rs2::depth_frame depth_map=frames.get_depth_frame();
+
             depth_map=threshold_filter.process(depth_map);
-            /*depth_map=dec_filter.process(depth_map);
-            depth_map=spatial_filter.process(depth_map);
-            depth_map=temp_filter.process(depth_map);
-            depth_map=hole_filter.process(depth_map);*/
 
-            boxes.clear();
-            boxes=msg->bounding_boxes;
-            int seq_id=msg->header.seq;
-            geometry_msgs::PoseArray poseArray;
-            //std_msgs::Float32MultiArray pub_array;
-            //pub_array.data.clear();
-            //pub_array.data.push_back(seq_id);
+            xstart=msg->rotation.x;
+            ystart=msg->rotation.y;
+            xend=msg->rotation.z;
+            yend=msg->rotation.w;
+            id=msg->translation.x;
 
-            for (size_t i = 0; i < boxes.size(); i++){
-                //std::cout << "Waiting in the for loop" << std::endl;
-                if(boxes[i].Class=="person"){
-                    //std::cout << "Grabbing corners" << std::endl;
-                    int xmin=boxes[i].xmin;
-                    int ymin=boxes[i].ymin;
-                    int xmax=boxes[i].xmax-1;
-                    int ymax=boxes[i].ymax-1;
-                    int xdelta=xmax-xmin;
-                    int ydelta=ymax-ymin;
-                    int center[2];
-                    center[0]=xdelta/2;
-                    center[1]=ydelta/2;
-                    //float depth=depth_map.get_distance(center[0],center[1]);
+            geometry_msgs::Pose pose;
 
-                    std::vector<float> depth_kernel;
-                    depth_kernel.clear();
-                    float depth;
+            int xmin=xstart;
+            int ymin=ystart;
+            int xmax=xend-1;
+            int ymax=yend-1;
+            int xdelta=xend-xstart;
+            int ydelta=yend-ystart;
+            int center[2];
 
-                    for (size_t i = 0; i < xdelta; i++){                
-                        for (size_t j = 0; j < ydelta; j++){
-                            depth=depth_map.get_distance(xmin+i,ymin+j);
-                            depth_kernel.push_back(depth);
-                        }
-                    }
+            int skip = 0;
 
-                    //calculate the median of the collected depth values
-                    std::sort(depth_kernel.begin(),depth_kernel.end());
-                    size_t kernel_size = depth_kernel.size();
-                    float depth_median;
-                    if (kernel_size % 2 == 0){
-                        depth_median=depth_kernel[kernel_size/2-1]+depth_kernel[kernel_size/2]/2;
-                    } else {
-                        depth_median=depth_kernel[kernel_size/2];
-                    }
-                    std::cout << "Median depth is "<< depth_median << std::endl;
-                    depth=depth_median;
-
-                    /*float depth_min=0;
-                    for (size_t i = 0; i < depth_kernel.size(); i++)
-                    {
-                        depth_min=depth_kernel[i];
-                        if(depth_min!=0) break;
-                    }
-                    
-                    float depth_min=*std::min_element(depth_kernel.begin(),depth_kernel.end());
-                    float depth_avg=std::accumulate(depth_kernel.begin(),depth_kernel.end(),0.0f)/depth_kernel.size();
-                    std::cout << "Average depth is "<< depth_avg << std::endl;
-                    std::cout << "Minimum depth is "<< depth_min << std::endl;*/
-
-                    float xcoordinate=((center[0]-cx)*depth)/fx; //((u-cx)*Z)/fx;
-                    //pub_array.data.push_back(xcoordinate);
-                    float ycoordinate=((center[1]-cy)*depth)/fy; //((v-cy)*Z)/fy;
-                    //pub_array.data.push_back(ycoordinate);
-                    float zcoordinate=depth;
-                    //pub_array.data.push_back(zcoordinate);
-
-                    poseArray.poses[i].position.x = xcoordinate;
-                    poseArray.poses[i].position.y = ycoordinate;
-                    poseArray.poses[i].position.z = zcoordinate;
-
-                    pub.publish(poseArray);
-                    //pub.publish(pub_array);
-                    std::cout << "I have published coordinates." << std::endl;      
-                }
+            if (xdelta==0 || ydelta==0) {
+                skip=1;
             }
+            
+            center[0]=xdelta/2;
+            center[1]=ydelta/2;
+
+            std::vector<float> depth_kernel;
+            depth_kernel.clear();
+            float depth;
+            float zcoordinate;
+                    
+
+            depth=depth_map.get_distance(xmin+center[0],ymin+center[1]); //get distance in center pixel
+            
+            if (depth>0.1 && depth<10) { //Valid depth value defined as 0.1<depth<10
+                zcoordinate=depth;
+            } else {
+                skip=1; //If no valid depth value, check next picture instead
+            }
+              
+
+            float xcoordinate=((center[0]-cx)*depth)/fx; //((u-cx)*Z)/fx;
+            float ycoordinate=((center[1]-cy)*depth)/fy; //((v-cy)*Z)/fy;
+
+            pose.position.x = xcoordinate;
+            pose.position.y = ycoordinate;
+            pose.position.z = zcoordinate;
+
+            if (skip==0) {
+                pub.publish(pose);
+                //pub.publish(pub_array);
+                std::cout << "I have published coordinates." << std::endl; 
+            }           
         }
 };
 
@@ -184,4 +127,3 @@ int main(int argc, char **argv) {
 
 return 0;
 }
-

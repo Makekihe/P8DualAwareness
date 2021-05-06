@@ -81,7 +81,14 @@ class doItAll{
 
             if (xdelta==0 || ydelta==0) {
                 skip=1;
+                std::cout << "Error in detection." << std::endl; 
+
+            } else if (ymax>HEIGHT || xmax>WIDTH || xmin<1 || ymin<1) {
+                skip=1;
+                std::cout << "Center is out of bounds." << std::endl; 
             }
+
+            
             
             center[0]=xdelta/2;
             center[1]=ydelta/2;
@@ -91,9 +98,11 @@ class doItAll{
             float depth;
             float zcoordinate;
             double median;
+
+
             
             std::vector<float> a;
-            
+            if (skip==0){
             a.push_back(depth_map.get_distance(xmin+center[0],ymin+center[1])); //get distance in center pixel
             a.push_back(depth_map.get_distance(xmin+center[0],ymin+center[1]+1)); //get distance in top pixel
             a.push_back(depth_map.get_distance(xmin+center[0]+1,ymin+center[1])); //get distance in right pixel
@@ -116,6 +125,7 @@ class doItAll{
                 depth=(double)a[n / 2];
         
             depth=(double)(a[(n - 1) / 2] + a[n / 2]) / 2.0;
+            }
             
             if (depth>0.1 && depth<10) { //Valid depth value defined as 0.1<depth<10
                 zcoordinate=depth;
@@ -130,6 +140,8 @@ class doItAll{
             pose.position.x = xcoordinate;
             pose.position.y = ycoordinate;
             pose.position.z = zcoordinate;
+            
+            
 
             if (skip==0) {
                 pub.publish(pose);

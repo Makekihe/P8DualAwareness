@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <iostream>
+#include <fstream>
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/Float32.h"
@@ -12,6 +14,7 @@ class calculateDistance{
         ros::NodeHandle nh;
         float shortestDistance = 100;
         float shortestReading = 100;
+	std::ofstream myfile;
 
 
     public:
@@ -23,28 +26,28 @@ class calculateDistance{
 
 
         void callback(const sensor_msgs::LaserScan::ConstPtr& msgs){
-            std::cout << "The shortest distance measured is: " << shortestDistance << " m" << std::endl;
             //Determine the smalles non-zero number in the array
-            ROS_INFO("DEBUGGING 1");
             std::vector<float> laser_data=msgs->ranges;
             int msg_size=laser_data.size();
-            for(int i = 0; i < msg_size; i++){ //THIS SIZEOF() FUNCTION DOESN'T TAKE IN ALL READINGS, SO THIS WONT WORK PROPERLY!!
-                std::cout << "DEBUGGING 2: " << i << "Distance is: " << msgs->ranges[i] << std::endl;
+            for(int i = 0; i < msg_size; i++){
+                std::cout << "Size of the scan.ranges: " << msg_size << std::endl;
                 if(msgs->ranges[i] < shortestReading && msgs->ranges[i] > 0.1){
-                    ROS_INFO("DEBUGGING 3");
                     shortestReading = msgs->ranges[i];
                 }
             }
 
             //Set new shortest distance if shorter than previous
-            ROS_INFO("DEBUGGING 4");
             if(shortestReading<shortestDistance){
-                ROS_INFO("DEBUGGING 5");
                 shortestDistance = shortestReading;
             }
 
             //Print out the currently shortest distance measured
+	    myfile.open("/home/DistanceMeasurements.txt");
+	    myfile << "The shortest distance measured in test 1:\n";
+	    myfile << shortestDistance << " m";
+	    myfile.close();
             std::cout << "The shortest distance measured is: " << shortestDistance << " m" << std::endl;
+ 
         }
 };
 

@@ -1,0 +1,12 @@
+<launch>
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="broadcaster_0" args="0 0 0 0 0 0 base_footprint base_link" /> -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="broadcaster_1" args="0.92 0 0 0 0 0 base_footprint under_tower" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="broadcaster_2" args="0 0 0.477 0 0 0 under_tower tower_connection" />
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="broadcaster_3" args="0.03315 0 0.078 0 0 0 tower_connection camera_base" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="broadcaster_4" args="0.0106 0.0325 0.0125 -1.57079 0 -1.57079 camera_base camera_colour_optical" /> -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="broadcaster_5" args="0.01283 0 0.1506 3.14158 0 0 tower_connection laser" />
+    
+    <include file="$(find rplidar_ros)/launch/rplidar.launch" />
+    <include file="$(find robot_pose_ekf)/conpleks_robot_pose_ekf.launch" />
+
+</launch>
